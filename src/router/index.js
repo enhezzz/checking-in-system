@@ -15,15 +15,11 @@ export default new Router({
     },
     {
       path: '/activity',
-      component: Index,
+      name: 'Activity',
+      component: Activity,
       children:[
         {
-          path: '',
-          name: 'activity',
-          component: Activity,
-        },
-        {
-          path: ':id',
+          path: ':type?',
           name: 'activityDetail',
           component: ActivityDetail
         }

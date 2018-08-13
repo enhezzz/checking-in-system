@@ -6,7 +6,10 @@
         <el-main>
             <el-tabs  v-model="activeName">
                 <el-tab-pane label="签到" name="first">
-                    <a href="/阿瑟东撒的" class="qd">签到</a>
+                    <a href="/" class="qd" @click.prevent="qd">
+
+                    {{qdStatus}}
+                    </a>
                 </el-tab-pane>
                 <el-tab-pane label="刷卡记录" name="second">
                     <el-table
@@ -59,18 +62,55 @@ import axios from "axios";
 import Navigator from './Navigator'
 export default {
   created: function() {
-    axios.get("/zc/list").then(response => {
-      console.log(response.data);
-      let tableData = response.data;
+    let currentPath = this.$route.path
+    axios.get(currentPath).then(response => {
+      let tableData = response.data.data,
+          text = response.data.msg;
+          console.log(tableData)
       this.tableData = tableData;
+      this.allStatus[currentPath].data = tableData;
+      this.allStatus[currentPath].status = text;
+      this.qdStatus = text;
     });
-  },
+  }, 
   data() {
     return {
       activeName: "first",
       tableData: [],
-      currentPage: 1
+      currentPage: 1,
+      qdStatus: '签到',
+      allStatus: {
+        '/activity/exercise': {
+          status: "签到",
+          data: []
+        },
+        '/activity/body': {
+          status: "签到",
+          data: []
+        },
+        "/activity/club": {
+          status: "签到",
+          data: []
+        },
+        "/activity": {
+          status: "签到",
+          data: []
+        }
+      }
     };
+  },
+  beforeRouteUpdate(to, from, next){
+    console.log(to)
+     axios.get(to.path).then(response => {
+       let data = response.data.data,
+           msg = response.data.msg
+       this.allStatus[to.path].data = data;
+       this.allStatus[to.path].status = msg;
+       this.qdStatus = this.allStatus[to.path].status;
+       this.tableData = data;
+     })
+    
+    next()
   },
   methods:{
         filterTag(value, row) {
@@ -81,6 +121,38 @@ export default {
       },
       handleCurrentChange(){
 
+      },
+      qd(){
+        let path = this.$route.path;
+        // if(path == '/activity'){
+        //   this.allStatus[path].status = '已签到';
+        //   this.qdStatus = '已签到'
+        // }
+        // else{
+        //   this.allStatus[path].status = '再次签到';
+        //   this.qdStatus = '再次签到'
+        // }
+        axios.get('/status').then(response=>{
+          let currentStatus = response.data.currentStatus;
+          if(currentStatus == 1){
+              this.$notify({
+          title: '你还有其他活动',
+          message: '这是一条不会自动关闭的消息',
+          duration: 0
+        });
+          }else if(this.qdStatus == '已签到'){
+           this.$notify({
+          title: '你已签到',
+          message: '这是一条不会自动关闭的消息',
+          duration: 0
+        });
+          }else{
+             axios.post(path,{mac: '2131-asd-da'}).then(response=>{
+            console.log(response.data)
+        })
+          }
+        })
+       
       }
   },
   components: {
